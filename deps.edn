@@ -1,0 +1,10 @@
+{:deps
+ {org.clojure/clojure {:mvn/version "1.11.1"}}
+
+ :aliases
+ {:run {:main-opts ["-m" "com.devdiscoveries.sdkit.main"]}
+  :autotest {:main-opts ["-m" "autotest"]
+             :extra-paths ["test" "scripts"]
+             :extra-deps {midje/midje {:mvn/version "1.10.5"}}}
+  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "RELEASE"}}
+             :main-opts ["-m" "antq.core"]}}}
