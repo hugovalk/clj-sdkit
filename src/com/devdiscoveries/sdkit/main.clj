@@ -1,4 +1,8 @@
-(ns com.devdiscoveries.sdkit.main)
+(ns com.devdiscoveries.sdkit.main
+  (:require
+   [clojure.tools.logging :refer [info]]))
 
 (defn -main []
-  (println "Hello World"))
+  (info "Starting up...")
+  (println "Hello World")
+  (info "Finished!"))

@@ -1,4 +1,5 @@
-(ns com.devdiscoveries.sdkit.simulation)
+(ns com.devdiscoveries.sdkit.simulation
+  (:require [clojure.tools.logging :refer [info]]))
 
 (defprotocol SimulationEventHandler
   "Protocol for Event handler that handles events from a simulation run."
@@ -9,10 +10,13 @@
 (defrecord SimpleStatusHandler [status]
   SimulationEventHandler
   (simulation-initialized [handler]
+    (info "Simulation initialized...")
     (reset! status ::simulation-initialized))
   (timestep-calculated [handler]
+    (info "Time step calculated.")
     (reset! status ::timestep-calculated))
   (simulation-finished [handler]
+    (info "Simulation finished!")
     (reset! status ::simulation-finished)))
 
 (defn run [handler]
