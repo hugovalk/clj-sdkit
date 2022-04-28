@@ -3,24 +3,24 @@
             [clojure.spec.alpha :as spec]))
 
 (spec/def ::initial-time number?)
-(spec/def ::time-step number?)
+(spec/def ::timestep number?)
 (spec/def ::final-time number?)
 (spec/def ::name string?)
 (spec/def ::model (spec/keys :req [::initial-time
                                    ::final-time
-                                   ::time-step
+                                   ::timestep
                                    ::name]))
 
-(spec/def ::total-time-steps number?)
-(spec/def ::time-steps-needed number?)
-(spec/def ::state-metadata (spec/keys :req [::time-steps-needed
-                                            ::total-time-steps]))
+(spec/def ::total-timesteps number?)
+(spec/def ::timesteps-needed number?)
+(spec/def ::state-metadata (spec/keys :req [::timesteps-needed
+                                            ::total-timesteps]))
 (spec/def ::world-state (spec/keys :req [::state-metadata]))
 
 (defn timesteps-needed [model]
   (let [start (::initial-time model)
         end (::final-time model)
-        step (::time-step model)]
+        step (::timestep model)]
     (/ (- end start) step)))
 
 (defprotocol SimulationEventHandler
@@ -46,19 +46,19 @@
 
 (defn initialize-simulation-run [model handler]
   "Initializing the simulation run. Returns an atom, containing the initial state of the simulation."
-  (let [initial-state {::state-metadata {::total-time-steps 0
-                                         ::time-steps-needed (timesteps-needed model)}}]
+  (let [initial-state {::state-metadata {::total-timesteps 0
+                                         ::timesteps-needed (timesteps-needed model)}}]
     (simulation-initialized handler initial-state)
     initial-state))
 
-(defn running-simulation-time-steps [model handler current-state]
-  "Running the next time-step of the model. Returns the updated state of the simulation."
+(defn running-simulation-timesteps [model handler current-state]
+  "Running the next timestep of the model. Returns the updated state of the simulation."
   (info current-state)
-  (if (<= (get-in current-state [::state-metadata ::time-steps-needed])
-         (get-in current-state [::state-metadata ::total-time-steps]))
+  (if (<= (get-in current-state [::state-metadata ::timesteps-needed])
+         (get-in current-state [::state-metadata ::total-timesteps]))
     current-state
     (let [updated-state (update-in current-state
-                                   [::state-metadata ::total-time-steps]
+                                   [::state-metadata ::total-timesteps]
                                    inc)]
       (timestep-calculated handler updated-state)
       (recur model handler updated-state))))
@@ -69,5 +69,5 @@
 
 (defn run [model handler]
   (->> (initialize-simulation-run model handler)
-       (running-simulation-time-steps model handler)
+       (running-simulation-timesteps model handler)
        (finish-simulation-run model handler)))
