@@ -57,14 +57,14 @@
 (defn running-simulation-timesteps [model handler current-state]
   "Running the next timestep of the model. Returns the updated state of the simulation."
   (info current-state)
-  (if (<= (get-metadata current-state ::timesteps-needed)
+  (if (> (get-metadata current-state ::timesteps-needed)
           (get-metadata current-state ::total-timesteps))
-    current-state
     (let [updated-state (update-in current-state
                                    [::state-metadata ::total-timesteps]
                                    inc)]
       (timestep-calculated handler updated-state)
-      (recur model handler updated-state))))
+      (recur model handler updated-state))
+    current-state))
 
 (defn finish-simulation-run [model handler current-state]
   "Finishing up the simulation run. Returns the end state of the simulation."
