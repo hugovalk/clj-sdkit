@@ -31,8 +31,8 @@
       (let [handler (simple-handler)
             initial-state (sim/initialize-simulation-run model handler)
             updated-state (sim/running-simulation-timesteps model handler initial-state)]
-        (get-in initial-state [::sim/state-metadata ::sim/total-timesteps]) => 0
-        (get-in updated-state [::sim/state-metadata ::sim/total-timesteps]) => 3)))
+        (sim/get-metadata initial-state ::sim/total-timesteps) => 0
+        (sim/get-metadata updated-state ::sim/total-timesteps) => 3)))
 
 (midje/facts "Facts about models."
              (midje/fact "A model has required elements in order to be valid."

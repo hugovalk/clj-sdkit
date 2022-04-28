@@ -23,6 +23,9 @@
         step (::timestep model)]
     (/ (- end start) step)))
 
+(defn get-metadata [state key]
+  (get-in state [::state-metadata key]))
+
 (defprotocol SimulationEventHandler
   "Protocol for Event handler that handles events from a simulation run."
   (simulation-initialized [handler initial-state] "Called when the simulation is initialized.")
@@ -54,8 +57,8 @@
 (defn running-simulation-timesteps [model handler current-state]
   "Running the next timestep of the model. Returns the updated state of the simulation."
   (info current-state)
-  (if (<= (get-in current-state [::state-metadata ::timesteps-needed])
-         (get-in current-state [::state-metadata ::total-timesteps]))
+  (if (<= (get-metadata current-state ::timesteps-needed)
+          (get-metadata current-state ::total-timesteps))
     current-state
     (let [updated-state (update-in current-state
                                    [::state-metadata ::total-timesteps]
