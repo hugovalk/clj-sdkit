@@ -5,16 +5,37 @@
 
 (def model {::sim/initial-time 0
             ::sim/time-step 1
-            ::sim/final-time 100
+            ::sim/final-time 3
             ::sim/name "Test model"})
 
-(midje/fact "A simulation can be run."
-      (let [handler (sim/->SimpleStatusHandler (atom nil))]
+(defn simple-handler []
+  (sim/->SimpleStatusHandler (atom nil) (atom nil)))
+
+(midje/facts "Facts about running simulations."
+   (midje/fact "A simulation can be run."
+      (let [handler (simple-handler)]
         (sim/run model handler)
         @(:status handler) => ::sim/simulation-finished))
 
+   (midje/fact "Initializing simulation returns initial world state."
+      (let [initial-state (sim/initialize-simulation-run model (simple-handler))]
+        (spec/conform ::sim/world-state initial-state) => initial-state))
+
+   (midje/fact "Running one time step returns valid world state."
+               (let [handler (simple-handler)
+                     initial-state (sim/initialize-simulation-run model handler)
+                     updated-state (sim/running-simulation-time-steps model handler initial-state)]
+        (spec/conform ::sim/world-state updated-state) => updated-state))
+
+   (midje/fact "Running simulation performs all time steps."
+      (let [handler (simple-handler)
+            initial-state (sim/initialize-simulation-run model handler)
+            updated-state (sim/running-simulation-time-steps model handler initial-state)]
+        (get-in initial-state [::sim/state-metadata ::sim/total-time-steps]) => 0
+        (get-in updated-state [::sim/state-metadata ::sim/total-time-steps]) => 3)))
+
 (midje/facts "Facts about models."
-             (midje/fact "Validating a model works."
+             (midje/fact "A model has required elements in order to be valid."
                          (let [m {::sim/initial-time 0
                                   ::sim/time-step 1
                                   ::sim/final-time 100
