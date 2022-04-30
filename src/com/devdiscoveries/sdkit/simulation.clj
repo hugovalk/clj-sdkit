@@ -6,10 +6,12 @@
 (spec/def ::timestep number?)
 (spec/def ::final-time number?)
 (spec/def ::name string?)
+(spec/def ::constants (spec/map-of keyword? number?))
 (spec/def ::model (spec/keys :req [::initial-time
                                    ::final-time
                                    ::timestep
-                                   ::name]))
+                                   ::name
+                                   ::constants]))
 
 (spec/def ::total-timesteps number?)
 (spec/def ::timesteps-needed number?)
