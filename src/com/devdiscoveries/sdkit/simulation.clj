@@ -1,5 +1,6 @@
 (ns com.devdiscoveries.sdkit.simulation
-  (:require [clojure.tools.logging :refer [info]]
+  (:require [com.devdiscoveries.sdkit.model :as mod]
+            [clojure.tools.logging :refer [info]]
             [clojure.spec.alpha :as spec]))
 
 (spec/def ::total-timesteps number?)
@@ -9,9 +10,9 @@
 (spec/def ::world-state (spec/keys :req [::state-metadata]))
 
 (defn timesteps-needed [model]
-  (let [start (::initial-time model)
-        end (::final-time model)
-        step (::timestep model)]
+  (let [start (::mod/initial-time model)
+        end (::mod/final-time model)
+        step (::mod/timestep model)]
     (/ (- end start) step)))
 
 (defn get-metadata [state key]

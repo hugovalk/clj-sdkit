@@ -1,21 +1,13 @@
 (ns com.devdiscoveries.sdkit.simulation-test
   (:require [midje.sweet :as midje]
             [com.devdiscoveries.sdkit.simulation :as sim]
+            [com.devdiscoveries.sdkit.model :as mod]
             [clojure.spec.alpha :as spec]))
 
-(defmodel model {::sim/initial-time 0
-                 ::sim/timestep 1
-                 ::sim/final-time 3
-                 ::sim/name "Test model"
-                 ::sim/entities [{::sim/type ::sim/constant
-                                  ::sim/id :const1
-                                  ::sim/value 10}
-                                 {::sim/type ::sim/constant
-                                  ::sim/id :const2
-                                  ::sim/value 20}
-                                 {::sim/type ::sim/converter
-                                  ::sim/id :conv1
-                                  ::sim/formula (+ :const1 :const2)}]})
+(def model {::mod/initial-time 0
+            ::mod/timestep 1
+            ::mod/final-time 3
+            ::mod/name "Test model"})
 
 (defn simple-handler []
   (sim/->SimpleStatusHandler (atom nil) (atom nil)))
@@ -45,9 +37,5 @@
 
    (midje/fact "When total time is not divisible by timestep, do not overflow beyond final time"
       (let [handler (simple-handler)]
-        (sim/run (assoc model ::sim/timestep 2) handler)
+        (sim/run (assoc model ::mod/timestep 2) handler)
         (sim/get-metadata @(:latest-state handler) ::sim/total-timesteps) => 2)))
-
-(midje/facts "Facts about models."
-   (midje/fact "A model has required elements in order to be valid."
-      (spec/conform ::sim/model model) => model ))
