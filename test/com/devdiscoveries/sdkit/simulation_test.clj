@@ -3,11 +3,19 @@
             [com.devdiscoveries.sdkit.simulation :as sim]
             [clojure.spec.alpha :as spec]))
 
-(def model {::sim/initial-time 0
-            ::sim/timestep 1
-            ::sim/final-time 3
-            ::sim/name "Test model"
-            ::sim/constants {:const1 10}})
+(defmodel model {::sim/initial-time 0
+                 ::sim/timestep 1
+                 ::sim/final-time 3
+                 ::sim/name "Test model"
+                 ::sim/entities [{::sim/type ::sim/constant
+                                  ::sim/id :const1
+                                  ::sim/value 10}
+                                 {::sim/type ::sim/constant
+                                  ::sim/id :const2
+                                  ::sim/value 20}
+                                 {::sim/type ::sim/converter
+                                  ::sim/id :conv1
+                                  ::sim/formula (+ :const1 :const2)}]})
 
 (defn simple-handler []
   (sim/->SimpleStatusHandler (atom nil) (atom nil)))
