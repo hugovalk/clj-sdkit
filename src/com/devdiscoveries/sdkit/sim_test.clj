@@ -39,7 +39,25 @@
   (doseq [c convs] (differential c state)))
 (run-converters)
 
-;; initialized
+
+;; run all preparations
+;;  - handling sub modules (IGNORE)
+;;  - prepare initial values
+;;  - prepare values for first time step
+;;  - fire simulation initialized event
+;;  - execute converters
+;;  - fire timestep calculated event
+
+;; loop all time steps
+;; Per loop:
+;;  - update current time
+;;  - prepare values for next time step
+;;  - integrate
+;;  - execute converters
+;;  - fire timestep calculated event
+
+;; finish simulation
+;;  - fire simulation finished event
 
 (defn integrate [state]
   (doseq [s stocks]
