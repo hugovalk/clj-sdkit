@@ -3,11 +3,6 @@
             [midje.sweet :as midje]
             [clojure.spec.alpha :as spec]))
 
-(def model {::mod/initial-time 0
-            ::mod/timestep 1
-            ::mod/final-time 3
-            ::mod/name "Test model"})
-
 (def state (atom {}))
 
 (midje/facts "Facts about the defconst macro."
@@ -65,5 +60,23 @@
 
 
 (midje/facts "Facts about models."
-   (midje/fact "A model has required elements in order to be valid."
-      (spec/conform ::mod/model model) => model ))
+   (let [state (atom {})
+         model (mod/defmodel test-model
+                 {:initial-time 0
+                  :timestep 1
+                  :final-time 3
+                  :name "Test model"}
+                 (mod/defconst const state 1)
+                 (mod/defconv conv state (fn [const] (+ 2 const)))
+                 (mod/defstock stock state 10 (fn [const] (+ 2 const)))
+                 (mod/defflow flow state (fn [const] (+ 2 const))))]
+     (midje/fact "A model has all its required parts."
+                 (spec/conform ::mod/model model) => model)
+     (midje/fact "The constants are set."
+                 (first (:constants model)) => const)
+     (midje/fact "The stocks are set."
+                 (first (:stocks model)) => stock)
+     (midje/fact "The converters are set."
+                 (first (:converters model)) => conv)
+     (midje/fact "The flows are set."
+                 (first (:flows model)) => flow)))

@@ -3,40 +3,35 @@
 
 (def state (atom {}))
 
-(defconst total-population state 10000)
-(defconst advertising-effectiveness state 0.011)
-(defconst contact-rate state 100)
-(defconst adoption-fraction state 0.015)
+(defmodel ref-model
+  {}
+  (defconst total-population state 10000)
+  (defconst advertising-effectiveness state 0.011)
+  (defconst contact-rate state 100)
+  (defconst adoption-fraction state 0.015)
 
-(defstock potential-adopters state 10000 (fn [adoption-rate] (- adoption-rate)))
-(defstock adopters state 0.0 (fn [adoption-rate] adoption-rate))
+  (defstock potential-adopters state 10000 (fn [adoption-rate] (- adoption-rate)))
+  (defstock adopters state 0.0 (fn [adoption-rate] adoption-rate))
 
-(defconv adoption-from-advertising state
-  (fn [potential-adopters advertising-effectiveness]
-    (* potential-adopters advertising-effectiveness)))
+  (defflow adoption-rate state
+    (fn [adoption-from-advertising adoption-from-word-of-mouth]
+      (+ adoption-from-advertising adoption-from-word-of-mouth)))
 
-(defconv adoption-from-word-of-mouth state
-  (fn [contact-rate adoption-fraction potential-adopters adopters total-population]
-    (* contact-rate
-       adoption-fraction
-       potential-adopters
-       (/ adopters total-population))))
+  (defconv adoption-from-advertising state
+    (fn [potential-adopters advertising-effectiveness]
+      (* potential-adopters advertising-effectiveness)))
+  (defconv adoption-from-word-of-mouth state
+    (fn [contact-rate adoption-fraction potential-adopters adopters total-population]
+      (* contact-rate
+         adoption-fraction
+         potential-adopters
+         (/ adopters total-population))))
+  )
 
-(defflow adoption-rate state
-  (fn [adoption-from-advertising adoption-from-word-of-mouth]
-    (+ adoption-from-advertising adoption-from-word-of-mouth)))
-
-
-;(defmodel my-model []
-;  (defconst total-population 10000))
-
-(def consts [total-population advertising-effectiveness contact-rate adoption-fraction])
-(def stocks [potential-adopters adopters])
-(def convs [adoption-from-advertising adoption-from-word-of-mouth])
-(def flows [adoption-rate])
 
 (defn run-converters []
-  (doseq [c convs] (differential c state)))
+  (doseq [c (:converters ref-model)] (differential c state)))
+
 (run-converters)
 
 
@@ -59,12 +54,12 @@
 ;; finish simulation
 ;;  - fire simulation finished event
 
-(defn integrate [state]
-  (doseq [s stocks]
+(defn integrate [model state]
+  (doseq [s (:stocks model)]
     (let [cur (:current-value s)]
       (reset! cur (+ @cur (* (differential s state)))))))
 (run-converters)
-(integrate state)
+(integrate ref-model state)
 
 ;(defn evaluate [model state]
 ;  (->> (set-constants model state)))
