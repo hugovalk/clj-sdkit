@@ -36,12 +36,12 @@
 
 
 ;; run all preparations
-;;  - handling sub modules (IGNORE)
-;;  - prepare initial values
-;;  - prepare values for first time step
-;;  - fire simulation initialized event
-;;  - execute converters
-;;  - fire timestep calculated event
+;;  - IGNORE - handling sub modules
+;;  - DONE all entities are already initialized - prepare initial values
+;;  - WIP this means current time state is correctly setup - prepare values for first time step
+;;  - TODO fire simulation initialized event
+;;  - TODO execute converters
+;;  - TODO fire timestep calculated event
 
 ;; loop all time steps
 ;; Per loop:
