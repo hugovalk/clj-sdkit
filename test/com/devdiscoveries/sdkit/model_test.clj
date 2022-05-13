@@ -81,7 +81,7 @@
 
 
 (midje/facts "Model integration tests."
-   (let [state (mod/initial-state ref-model)]
+   (let [state (mod/setup-initial-state ref-model)]
      (midje/fact "State is correctly initialized."
                  (count state) => 9)
      (midje/fact "Constants are correctly set."

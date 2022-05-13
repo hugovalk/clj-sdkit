@@ -118,7 +118,7 @@ We have the following entities:
   (let [sid (id stock)]
     (+ (sid state) (differential stock state))))
 
-(defn initial-state [model]
+(defn setup-initial-state [model]
   (-> {}
       (add-constants (:constants model))
       (add-stocks nil (:stocks model) nil)
@@ -126,8 +126,8 @@ We have the following entities:
       (add-flows (:flows model))))
 
 
-(defn- char-range
-  "Helper function that returns a vector of characters, starting with 'a', 'b', etc."
+(defn- symbol-range
+  "Helper function that returns a vector of symbols, starting with 'a', 'b', etc."
   [chars-needed]
   (into []
         (map (fn [i] (->> i
@@ -147,7 +147,7 @@ We have the following entities:
 (defmacro defconv [conv-name formula]
   "Macro that makes defining a Converter and adding it to the world state easier. The formula has to given in the form of (fn [arg1 arg2] ...body...). The args must refer to other model entities, as they will be converted to keywords to be used in the constructor for Converter. "
   (let [args (second formula)
-        args-map (zipmap args (char-range (count args)))]
+        args-map (zipmap args (symbol-range (count args)))]
     `(do
        (def ~conv-name
          (->Converter ~(keyword conv-name)
@@ -159,7 +159,7 @@ We have the following entities:
 (defmacro defstock [stock-name default-value formula]
     "Macro that makes defining a Stock and adding it to the world state easier. The formula has to given in the form of (fn [arg1 arg2] ...body...). The args must refer to other model entities, as they will be converted to keywords to be used in the constructor for Stock. "
   (let [args (second formula)
-        args-map (zipmap args (char-range (count args)))]
+        args-map (zipmap args (symbol-range (count args)))]
     `(do
        (def ~stock-name
          (->Stock ~(keyword stock-name)
@@ -172,7 +172,7 @@ We have the following entities:
 (defmacro defflow [flow-name formula]
     "Macro that makes defining a Flow and adding it to the world state easier. The formula has to given in the form of (fn [arg1 arg2] ...body...). The args must refer to other model entities, as they will be converted to keywords to be used in the constructor for Flow. "
   (let [args (second formula)
-        args-map (zipmap args (char-range (count args)))]
+        args-map (zipmap args (symbol-range (count args)))]
     `(do
        (def ~flow-name
          (->Flow ~(keyword flow-name)
