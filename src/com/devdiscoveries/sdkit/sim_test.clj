@@ -4,23 +4,26 @@
 (def state (atom {}))
 
 (defmodel ref-model
-  {}
-  (defconst total-population state 10000)
-  (defconst advertising-effectiveness state 0.011)
-  (defconst contact-rate state 100)
-  (defconst adoption-fraction state 0.015)
+  {:initial-time 0
+   :final-time 100
+   :timestep 1
+   :name "ref-model"}
+  (defconst total-population 10000)
+  (defconst advertising-effectiveness 0.011)
+  (defconst contact-rate 100)
+  (defconst adoption-fraction 0.015)
 
-  (defstock potential-adopters state 10000 (fn [adoption-rate] (- adoption-rate)))
-  (defstock adopters state 0.0 (fn [adoption-rate] adoption-rate))
+  (defstock potential-adopters 10000 (fn [adoption-rate] (- adoption-rate)))
+  (defstock adopters 0.0 (fn [adoption-rate] adoption-rate))
 
-  (defflow adoption-rate state
+  (defflow adoption-rate
     (fn [adoption-from-advertising adoption-from-word-of-mouth]
       (+ adoption-from-advertising adoption-from-word-of-mouth)))
 
-  (defconv adoption-from-advertising state
+  (defconv adoption-from-advertising
     (fn [potential-adopters advertising-effectiveness]
       (* potential-adopters advertising-effectiveness)))
-  (defconv adoption-from-word-of-mouth state
+  (defconv adoption-from-word-of-mouth
     (fn [contact-rate adoption-fraction potential-adopters adopters total-population]
       (* contact-rate
          adoption-fraction
@@ -54,12 +57,12 @@
 ;; finish simulation
 ;;  - fire simulation finished event
 
-(defn integrate [model state]
-  (doseq [s (:stocks model)]
-    (let [cur (:current-value s)]
-      (reset! cur (+ @cur (* (differential s state)))))))
-(run-converters)
-(integrate ref-model state)
+;(defn integrate [model state]
+;  (doseq [s (:stocks model)]
+;    (let [cur (:current-value s)]
+;      (reset! cur (+ @cur (* (differential s state)))))))
+;(run-converters)
+;(integrate ref-model state)
 
 ;(defn evaluate [model state]
 ;  (->> (set-constants model state)))

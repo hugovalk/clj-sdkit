@@ -34,35 +34,38 @@ We have the following entities:
   (value [self state] "Returns the current value based on a certain world state. `state` is a map.")
   (differential [self state] "Returns the differential to the value based on a certain world state. `state` is a map."))
 
-(defrecord Constant [const-id internal-value]
+(defrecord Constant [const-id default-value]
   ModelEntity
   (id [self] const-id)
-  (value [self state] @internal-value)
+  (value [self state] (const-id state))
   (differential [self state] 0.0))
 
 (defrecord Converter [conv-id formula args]
   ModelEntity
   (id [self] conv-id)
   (value [self state]
-    (let [eval-args (map (fn [e] (value (e @state) state)) args)]
+    (let [eval-args (map (fn [e] (e state)) args)]
       (apply formula eval-args)))
   (differential [self state] nil))
 
-(defrecord Stock [stock-id current-value formula args]
+(defrecord Stock [stock-id default-value formula args]
   ModelEntity
   (id [self] stock-id)
-  (value [self state] @current-value)
+  (value [self state] (stock-id state))
   (differential [self state]
-    (let [eval-args (map (fn [e] (value (e @state) state)) args)]
+    (let [eval-args (map (fn [e] (e state)) args)]
       (apply formula eval-args))))
 
 (defrecord Flow [flow-id formula args]
   ModelEntity
   (id [self] flow-id)
   (value [self state]
-    (let [eval-args (map (fn [e] (value (e @state) state)) args)]
+    (let [eval-args (map (fn [e] (e state)) args)]
       (apply formula eval-args)))
   (differential [self state] nil))
+
+
+(defrecord Model [metadata stocks flows converters constants])
 
 
 (defn add-entity
@@ -73,7 +76,55 @@ We have the following entities:
 (defn print-state!
   "Convenience method to print the current world state for debug and logging purposes."
   [state]
-  (doseq [[k v] @state] (println k "=" (value v state))))
+  (if (empty? state)
+    (println "State is empty.")
+    (doseq [[k v]  state] (println k "=" v))))
+
+(defn add-constants [state constants]
+  (if (not (empty? constants))
+    (let [c (first constants)]
+      (recur (assoc state (id c) (:default-value c)) (rest constants)))
+    state))
+
+(defn add-stocks [state last-state stocks integrator-fn]
+  (if (not (empty? stocks))
+    (let [s (first stocks)
+          value (if last-state
+                  (integrator-fn last-state s)
+                  (:default-value s))]
+      (recur (assoc state (id s) value)
+             last-state
+             (rest stocks)
+             integrator-fn))
+    state))
+
+(defn add-converters [state converters]
+  (if (not (empty? converters))
+    (let [c (first converters)
+          value (value c state)]
+      (recur (assoc state (id c) value)
+             (rest converters)))
+    state))
+
+(defn add-flows [state flows]
+  (if (not (empty? flows))
+    (let [f (first flows)
+          value (value f state)]
+      (recur (assoc state (id f) value)
+             (rest flows)))
+    state))
+
+(defn euler-integrator [state stock]
+  (let [sid (id stock)]
+    (+ (sid state) (differential stock state))))
+
+(defn initial-state [model]
+  (-> {}
+      (add-constants (:constants model))
+      (add-stocks nil (:stocks model) nil)
+      (add-converters (:converters model))
+      (add-flows (:flows model))))
+
 
 (defn- char-range
   "Helper function that returns a vector of characters, starting with 'a', 'b', etc."
@@ -86,14 +137,14 @@ We have the following entities:
              (range (int \a) (+ (int \a) chars-needed)))))
 
 
-(defmacro defconst [const-name state value]
+(defmacro defconst [const-name default-value]
   "Macro that makes defining a Constant and adding it to the world state easier."
   `(do
-     (def ~const-name (->Constant ~(keyword const-name) (atom ~value)))
-     (add-entity ~state ~const-name)
+     (def ~const-name (->Constant ~(keyword const-name) ~default-value))
      ~const-name))
 
-(defmacro defconv [conv-name state formula]
+
+(defmacro defconv [conv-name formula]
   "Macro that makes defining a Converter and adding it to the world state easier. The formula has to given in the form of (fn [arg1 arg2] ...body...). The args must refer to other model entities, as they will be converted to keywords to be used in the constructor for Converter. "
   (let [args (second formula)
         args-map (zipmap args (char-range (count args)))]
@@ -102,25 +153,23 @@ We have the following entities:
          (->Converter ~(keyword conv-name)
                       ~(eval (w/postwalk-replace args-map formula))
                       ~(into [] (map (fn [a] (keyword a)) args))))
-       (add-entity ~state ~conv-name)
        ~conv-name)))
 
 
-(defmacro defstock [stock-name state initial-value formula]
+(defmacro defstock [stock-name default-value formula]
     "Macro that makes defining a Stock and adding it to the world state easier. The formula has to given in the form of (fn [arg1 arg2] ...body...). The args must refer to other model entities, as they will be converted to keywords to be used in the constructor for Stock. "
   (let [args (second formula)
         args-map (zipmap args (char-range (count args)))]
     `(do
        (def ~stock-name
          (->Stock ~(keyword stock-name)
-                  (atom ~initial-value)
+                  ~default-value
                   ~(eval (w/postwalk-replace args-map formula))
                   ~(into [] (map (fn [a] (keyword a)) args))))
-       (add-entity ~state ~stock-name)
        ~stock-name)))
 
 
-(defmacro defflow [flow-name state formula]
+(defmacro defflow [flow-name formula]
     "Macro that makes defining a Flow and adding it to the world state easier. The formula has to given in the form of (fn [arg1 arg2] ...body...). The args must refer to other model entities, as they will be converted to keywords to be used in the constructor for Flow. "
   (let [args (second formula)
         args-map (zipmap args (char-range (count args)))]
@@ -129,11 +178,8 @@ We have the following entities:
          (->Flow ~(keyword flow-name)
                  ~(eval (w/postwalk-replace args-map formula))
                  ~(into [] (map (fn [a] (keyword a)) args))))
-       (add-entity ~state ~flow-name)
        ~flow-name)))
 
-
-(defrecord Model [metadata stocks flows converters constants])
 
 (defn filter-model-entities [macro coll]
     (into [] (filter (fn [e] (s/includes? (first e) (str macro))) coll)))
