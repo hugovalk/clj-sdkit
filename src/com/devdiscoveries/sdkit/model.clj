@@ -9,9 +9,9 @@
 (spec/def ::final-time number?)
 (spec/def ::name string?)
 (spec/def ::metadata (spec/keys :req-un [::initial-time
-                                      ::final-time
-                                      ::timestep
-                                      ::name]))
+                                         ::final-time
+                                         ::timestep
+                                         ::name]))
 
 (spec/def ::stocks vector?)
 (spec/def ::flows vector?)
@@ -31,38 +31,42 @@ We have the following entities:
    - Converter: Defines a boundary condition of the model, or can be calculated from other entities with a formula.
    - Flow: Defines how one Stock flows into another."
   (id [self] "Returns key for use in world-state.")
-  (value [self state] "Returns the current value based on a certain world state. `state` is a map.")
-  (differential [self state] "Returns the differential to the value based on a certain world state. `state` is a map."))
+  (value [self state] "Returns the current value based on a certain world state. `state` is a map."))
+
+(defn- apply-formula
+  "Applies a formula for a `ModelEntity` to the value based on a certain world state. Such a `ModelEntity` must have `:args` and `:formula` properties. `state` is a map."
+  [entity state]
+  (let [eval-args (map (fn [e] (e state)) (:args entity))]
+    (apply (:formula entity) eval-args)))
+
 
 (defrecord Constant [const-id default-value]
   ModelEntity
   (id [self] const-id)
-  (value [self state] (const-id state))
-  (differential [self state] 0.0))
+  (value [self state] (const-id state)))
 
 (defrecord Converter [conv-id formula args]
   ModelEntity
   (id [self] conv-id)
   (value [self state]
     (let [eval-args (map (fn [e] (e state)) args)]
-      (apply formula eval-args)))
-  (differential [self state] nil))
+      (apply formula eval-args))))
 
 (defrecord Stock [stock-id default-value formula args]
   ModelEntity
   (id [self] stock-id)
-  (value [self state] (stock-id state))
-  (differential [self state]
-    (let [eval-args (map (fn [e] (e state)) args)]
-      (apply formula eval-args))))
+  (value [self state] (stock-id state)))
+
+(defn differential
+  "Returns the differential for a `Stock` to the value based on a certain world state. `state` is a map."
+  [stock state] (apply-formula stock state))
 
 (defrecord Flow [flow-id formula args]
   ModelEntity
   (id [self] flow-id)
   (value [self state]
     (let [eval-args (map (fn [e] (e state)) args)]
-      (apply formula eval-args)))
-  (differential [self state] nil))
+      (apply formula eval-args))))
 
 
 (defrecord Model [metadata stocks flows converters constants])

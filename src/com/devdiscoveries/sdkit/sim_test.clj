@@ -32,12 +32,6 @@
   )
 
 
-(defn run-converters []
-  (doseq [c (:converters ref-model)] (differential c state)))
-
-(run-converters)
-
-
 ;; run all preparations
 ;;  - IGNORE - handling sub modules
 ;;  - DONE all entities are already initialized - prepare initial values
