@@ -11,6 +11,6 @@
   :autotest {:main-opts ["-m" "autotest"]
              :extra-paths ["test" "scripts"]
              :extra-deps {midje/midje {:mvn/version "1.10.5"}}
-             :jvm-opts ["-Dclojure.tools.logging.factory=clojure.tools.logging.impl/slf4j-factory"]}
+             :jvm-opts ["-Dclojure.tools.logging.factory=clojure.tools.logging.impl/slf4j-factory" "-Dlogback.configurationFile=resources/test-logback.xml"]}
   :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "RELEASE"}}
              :main-opts ["-m" "antq.core"]}}}
