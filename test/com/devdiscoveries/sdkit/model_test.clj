@@ -91,4 +91,10 @@
      (midje/fact "Converters are correctly calculated."
                  (mod/value adoption-from-advertising state) => 110.0)
      (midje/fact "Flows are correctly calculated."
-                 (mod/value adoption-rate state) => 110.0)))
+                 (mod/value adoption-rate state) => 110.0)
+     (midje/fact "Constant differential returns 0.0 as it does not change."
+                 (mod/differential contact-rate state) => 0.0)
+     (midje/fact "Converter differential returns nil as it has no meaning."
+                 (mod/differential adoption-from-advertising state) => nil)
+     (midje/fact "Flow differential returns nil as it has no meaning."
+                 (mod/differential adoption-rate state) => nil)))
