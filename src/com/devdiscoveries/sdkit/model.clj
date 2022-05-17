@@ -72,64 +72,6 @@ We have the following entities:
 (defrecord Model [metadata stocks flows converters constants])
 
 
-(defn add-entity
-  "Convenience function to add a model entity to a world state."
-  [state entity]
-  (swap! state (fn [m] (assoc m (id entity) entity))))
-
-(defn print-state!
-  "Convenience method to print the current world state for debug and logging purposes."
-  [state]
-  (if (empty? state)
-    (println "State is empty.")
-    (doseq [[k v]  state] (println k "=" v))))
-
-(defn add-constants [state constants]
-  (if (not (empty? constants))
-    (let [c (first constants)]
-      (recur (assoc state (id c) (:default-value c)) (rest constants)))
-    state))
-
-(defn add-stocks [state last-state stocks integrator-fn]
-  (if (not (empty? stocks))
-    (let [s (first stocks)
-          value (if last-state
-                  (integrator-fn last-state s)
-                  (:default-value s))]
-      (recur (assoc state (id s) value)
-             last-state
-             (rest stocks)
-             integrator-fn))
-    state))
-
-(defn add-converters [state converters]
-  (if (not (empty? converters))
-    (let [c (first converters)
-          value (value c state)]
-      (recur (assoc state (id c) value)
-             (rest converters)))
-    state))
-
-(defn add-flows [state flows]
-  (if (not (empty? flows))
-    (let [f (first flows)
-          value (value f state)]
-      (recur (assoc state (id f) value)
-             (rest flows)))
-    state))
-
-(defn euler-integrator [state stock]
-  (let [sid (id stock)]
-    (+ (sid state) (differential stock state))))
-
-(defn setup-initial-state [model]
-  (-> {}
-      (add-constants (:constants model))
-      (add-stocks nil (:stocks model) nil)
-      (add-converters (:converters model))
-      (add-flows (:flows model))))
-
-
 (defn- symbol-range
   "Helper function that returns a vector of symbols, starting with 'a', 'b', etc."
   [chars-needed]
