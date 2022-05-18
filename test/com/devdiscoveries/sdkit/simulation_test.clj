@@ -3,12 +3,14 @@
             [com.devdiscoveries.sdkit.event-handler :as ev]
             [com.devdiscoveries.sdkit.simulation :as sim]
             [com.devdiscoveries.sdkit.model :as mod]
+            [com.devdiscoveries.sdkit.world-state :as state]
             [clojure.spec.alpha :as spec]))
 
-(def model {:initial-time 0
-            :timestep 1
-            :final-time 3
-            ::mod/name "Test model"})
+(mod/defmodel model
+  {:initial-time 0
+   :timestep 1
+   :final-time 3
+   :name "Test model"})
 
 (defn simple-handler []
   (ev/->SimpleStatusHandler (atom nil) (atom nil)))
@@ -21,25 +23,25 @@
 
    (midje/fact "Initializing simulation returns initial world state."
       (let [initial-state (sim/initialize-simulation-run model (simple-handler))]
-        (spec/conform ::sim/world-state initial-state) => initial-state))
+        (spec/conform ::state/world-state initial-state) => initial-state))
 
    (midje/fact "Running one time step returns valid world state."
       (let [handler (simple-handler)
             initial-state (sim/initialize-simulation-run model handler)
             updated-state (sim/running-simulation-timesteps model handler initial-state)]
-        (spec/conform ::sim/world-state updated-state) => updated-state))
+        (spec/conform ::state/world-state updated-state) => updated-state))
 
    (midje/fact "Running simulation performs all time steps."
       (let [handler (simple-handler)
             initial-state (sim/initialize-simulation-run model handler)
             updated-state (sim/running-simulation-timesteps model handler initial-state)]
-        (sim/get-metadata initial-state ::sim/total-timesteps) => 0
-        (sim/get-metadata updated-state ::sim/total-timesteps) => 3))
+        (state/total-timesteps initial-state) => 0
+        (state/total-timesteps updated-state) => 3))
 
    (midje/fact "When total time is not divisible by timestep, do not overflow beyond final time"
       (let [handler (simple-handler)]
-        (sim/run (assoc model :timestep 2) handler)
-        (sim/get-metadata @(:latest-state handler) ::sim/total-timesteps) => 2)))
+        (sim/run (update-in model [:metadata :timestep] (fn [a] 2)) handler)
+        (state/total-timesteps @(:latest-state handler)) => 2)))
 
 
 (mod/defmodel ref-model
@@ -70,10 +72,10 @@
          (/ adopters total-population)))))
 
 
-(midje/facts "Model integration tests."
+(midje/facts "Setup initial state tests."
    (let [state (sim/setup-initial-state ref-model)]
      (midje/fact "State is correctly initialized."
-                 (count state) => 9)
+                 (count state) => 10)
      (midje/fact "Constants are correctly set."
                  (mod/value contact-rate state) => 100)
      (midje/fact "Stocks are correctly set."
@@ -84,3 +86,10 @@
                  (mod/value adoption-rate state) => 110.0)
      (midje/fact "Stock differential is correctly calculated."
                  (mod/differential adopters state) => 110.0)))
+
+
+(midje/fact :integration "Simulation integration test."
+   (let [handler (simple-handler)
+         end-state (sim/run ref-model handler)]
+     @(:status handler) => :ev/simulation-finished
+     (state/total-timesteps end-state) => 100))

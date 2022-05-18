@@ -18,10 +18,10 @@
 (spec/def ::converters vector?)
 (spec/def ::constants vector?)
 (spec/def ::model (spec/keys :req-un [::metadata
-                                         ::stocks
-                                         ::flows
-                                         ::converters
-                                         ::constants]))
+                                      ::stocks
+                                      ::flows
+                                      ::converters
+                                      ::constants]))
 
 (defprotocol ModelEntity
   "Protocol defining the methods that Model Entities must implement. For every Model Entity one can talk about it's value and/or the differential on that value, based on some world state.

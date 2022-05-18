@@ -1,31 +1,8 @@
 (ns com.devdiscoveries.sdkit.simulation
   (:require [com.devdiscoveries.sdkit.model :as mod]
             [com.devdiscoveries.sdkit.event-handler :as ev]
-            [clojure.tools.logging :refer [info]]
-            [clojure.spec.alpha :as spec]))
-
-(spec/def ::total-timesteps number?)
-(spec/def ::timesteps-needed number?)
-(spec/def ::state-metadata (spec/keys :req [::timesteps-needed
-                                            ::total-timesteps]))
-(spec/def ::world-state (spec/keys :req [::state-metadata]))
-
-(defn- timesteps-needed [model]
-  (let [start (:initial-time model)
-        end (:final-time model)
-        step (:timestep model)]
-    (/ (- end start) step)))
-
-(defn get-metadata [state key]
-  (get-in state [::state-metadata key]))
-
-
-(defn print-state!
-  "Convenience method to print the current world state for debug and logging purposes."
-  [state]
-  (if (empty? state)
-    (println "State is empty.")
-    (doseq [[k v]  state] (println k "=" v))))
+            [com.devdiscoveries.sdkit.world-state :as state]
+            [clojure.tools.logging :refer [info]]))
 
 (defn- add-constants [state constants]
   (if (not (empty? constants))
@@ -66,29 +43,31 @@
     (+ (sid state) (mod/differential stock state))))
 
 (defn setup-initial-state [model]
-  (-> {}
+  (-> (state/init-from-model model)
       (add-constants (:constants model))
       (add-stocks nil (:stocks model) nil)
+      (add-converters (:converters model))
+      (add-flows (:flows model))))
+
+(defn calculate-new-state [state model integrator-fn]
+  (-> (state/step-time state)
+      (add-constants (:constants model))
+      (add-stocks state (:stocks model) integrator-fn)
       (add-converters (:converters model))
       (add-flows (:flows model))))
 
 
 (defn initialize-simulation-run [model handler]
   "Initializing the simulation run. Returns an atom, containing the initial state of the simulation."
-  (let [initial-state {}
-        initial-state {::state-metadata {::total-timesteps 0
-                                         ::timesteps-needed (timesteps-needed model)}}]
+  (let [initial-state (setup-initial-state model)]
     (ev/simulation-initialized handler initial-state)
     initial-state))
 
 (defn running-simulation-timesteps [model handler current-state]
   "Running the next timestep of the model. Returns the updated state of the simulation."
-  (info current-state)
-  (if (> (get-metadata current-state ::timesteps-needed)
-          (get-metadata current-state ::total-timesteps))
-    (let [updated-state (update-in current-state
-                                   [::state-metadata ::total-timesteps]
-                                   inc)]
+  (if (> (state/timesteps-needed current-state)
+          (state/total-timesteps current-state))
+    (let [updated-state (calculate-new-state current-state model euler-integrator)]
       (ev/timestep-calculated handler updated-state)
       (recur model handler updated-state))
     current-state))
