@@ -5,8 +5,8 @@
 
 (defmodel ref-model
   {:initial-time 0
-   :final-time 100
-   :timestep 1
+   :final-time 10
+   :timestep 0.25
    :name "ref-model"}
   (defconst total-population 10000)
   (defconst advertising-effectiveness 0.011)

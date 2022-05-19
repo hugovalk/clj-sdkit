@@ -39,8 +39,10 @@
     state))
 
 (defn euler-integrator [state stock]
-  (let [sid (mod/id stock)]
-    (+ (sid state) (mod/differential stock state))))
+  (let [sid (mod/id stock)
+        dt (state/timestep state)]
+    (+ (sid state)
+       (* dt (mod/differential stock state)))))
 
 (defn setup-initial-state [model]
   (-> (state/init-from-model model)

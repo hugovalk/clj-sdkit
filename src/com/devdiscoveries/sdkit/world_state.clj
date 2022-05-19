@@ -3,7 +3,8 @@
 
 (spec/def ::total-timesteps number?)
 (spec/def ::timesteps-needed number?)
-(spec/def ::state-metadata (spec/keys :req [::timesteps-needed
+(spec/def ::state-metadata (spec/keys :req [::timestep
+                                            ::timesteps-needed
                                             ::total-timesteps]))
 (spec/def ::world-state (spec/keys :req [::state-metadata]))
 
@@ -16,6 +17,8 @@
 (defn timesteps-needed [state]
   (get-metadata state ::timesteps-needed))
 
+(defn timestep [state]
+  (get-metadata state ::timestep))
 
 (defn- calc-timesteps-needed [model]
   (let [meta (:metadata model)
@@ -25,11 +28,13 @@
     (/ (- end start) step)))
 
 (defn init-from-model [model]
-  {::state-metadata {::total-timesteps 0
+  {::state-metadata {::timestep (get-in model [:metadata :timestep])
+                     ::total-timesteps 0
                      ::timesteps-needed (calc-timesteps-needed model)}})
 
 (defn step-time [state]
-  (update-in state [::state-metadata ::total-timesteps] inc))
+  (update-in state [::state-metadata ::total-timesteps]
+             (fn [t] (+ t (timestep state)))))
 
 (defn print-state!
   "Convenience method to print the current world state for debug and logging purposes."
