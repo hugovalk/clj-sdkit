@@ -1,5 +1,6 @@
 (ns com.devdiscoveries.sdkit.event-handler
   (:require [clojure.tools.logging :refer [info]]
+            [clojure.string :refer [join]]
             [com.devdiscoveries.sdkit.world-state :as state]))
 
 (defprotocol SimulationEventHandler
@@ -45,3 +46,18 @@
   (simulation-finished [handler end-state]
     (info "Simulation finished!")
     (reset! status ::simulation-finished)))
+
+(defrecord CSVHandler [file-name column-keys]
+  SimulationEventHandler
+  (simulation-initialized [handler initial-state]
+    (spit file-name "timestep,")
+    (spit file-name (join "," (map name column-keys)) :append true)
+    (spit file-name "\n" :append true)
+    (spit file-name (str (state/total-timesteps initial-state) ",") :append true)
+    (spit file-name (join "," (map initial-state column-keys)) :append true)
+    (spit file-name "\n" :append true))
+  (timestep-calculated [handler updated-state]
+    (spit file-name (str (state/total-timesteps updated-state) ",") :append true)
+    (spit file-name (join "," (map updated-state column-keys)) :append true)
+    (spit file-name "\n" :append true))
+  (simulation-finished [handler end-state]))
