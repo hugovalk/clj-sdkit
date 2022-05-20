@@ -1,4 +1,5 @@
 (ns com.devdiscoveries.sdkit.simulation-test
+  (:use [com.devdiscoveries.sdkit.sweet])
   (:require [midje.sweet :as midje]
             [com.devdiscoveries.sdkit.event-handler :as ev]
             [com.devdiscoveries.sdkit.simulation :as sim]
@@ -6,14 +7,11 @@
             [com.devdiscoveries.sdkit.world-state :as state]
             [clojure.spec.alpha :as spec]))
 
-(mod/defmodel model
+(defmodel model
   {:initial-time 0
    :timestep 1
    :final-time 3
    :name "Test model"})
-
-(defn simple-handler []
-  (ev/->SimpleStatusHandler (atom nil) (atom nil)))
 
 (midje/facts "Facts about running simulations."
    (midje/fact "A simulation can be run."
@@ -44,27 +42,27 @@
         (state/total-timesteps @(:latest-state handler)) => 2)))
 
 
-(mod/defmodel ref-model
+(defmodel ref-model
   {:initial-time 0
    :final-time 100
    :timestep 1
    :name "ref-model"}
-  (mod/defconst total-population 10000)
-  (mod/defconst advertising-effectiveness 0.011)
-  (mod/defconst contact-rate 100)
-  (mod/defconst adoption-fraction 0.015)
+  (defconst total-population 10000)
+  (defconst advertising-effectiveness 0.011)
+  (defconst contact-rate 100)
+  (defconst adoption-fraction 0.015)
 
-  (mod/defstock potential-adopters 10000 (fn [adoption-rate] (- adoption-rate)))
-  (mod/defstock adopters 0.0 (fn [adoption-rate] adoption-rate))
+  (defstock potential-adopters 10000 (fn [adoption-rate] (- adoption-rate)))
+  (defstock adopters 0.0 (fn [adoption-rate] adoption-rate))
 
-  (mod/defflow adoption-rate
+  (defflow adoption-rate
     (fn [adoption-from-advertising adoption-from-word-of-mouth]
       (+ adoption-from-advertising adoption-from-word-of-mouth)))
 
-  (mod/defconv adoption-from-advertising
+  (defconv adoption-from-advertising
     (fn [potential-adopters advertising-effectiveness]
       (* potential-adopters advertising-effectiveness)))
-  (mod/defconv adoption-from-word-of-mouth
+  (defconv adoption-from-word-of-mouth
     (fn [contact-rate adoption-fraction potential-adopters adopters total-population]
       (* contact-rate
          adoption-fraction

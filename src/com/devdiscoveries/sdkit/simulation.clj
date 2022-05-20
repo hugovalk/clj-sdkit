@@ -5,13 +5,13 @@
             [clojure.tools.logging :refer [info]]))
 
 (defn- add-constants [state constants]
-  (if (not (empty? constants))
+  (if (and constants (not (empty? constants)))
     (let [c (first constants)]
       (recur (assoc state (mod/id c) (:default-value c)) (rest constants)))
     state))
 
 (defn- add-stocks [state last-state stocks integrator-fn]
-  (if (not (empty? stocks))
+  (if (and stocks (not (empty? stocks)))
     (let [s (first stocks)
           value (if last-state
                   (integrator-fn last-state s)
@@ -23,7 +23,7 @@
     state))
 
 (defn- add-converters [state converters]
-  (if (not (empty? converters))
+  (if (and converters (not (empty? converters)))
     (let [c (first converters)
           value (mod/value c state)]
       (recur (assoc state (mod/id c) value)
@@ -31,7 +31,7 @@
     state))
 
 (defn- add-flows [state flows]
-  (if (not (empty? flows))
+  (if (and flows (not (empty? flows)))
     (let [f (first flows)
           value (mod/value f state)]
       (recur (assoc state (mod/id f) value)
