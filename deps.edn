@@ -3,7 +3,7 @@
   org.clojure/tools.logging {:mvn/version "1.2.4"}
   org.slf4j/slf4j-api {:mvn/version "1.7.36"}
   ch.qos.logback/logback-classic {:mvn/version "1.2.11"}}
- :paths ["src" "resources"]
+ :paths ["src" "resources" "models"]
  :jvm-opts ["-Dclojure.tools.logging.factory=clojure.tools.logging.impl/slf4j-factory"]
  :aliases
  {:run {:main-opts ["-m" "com.devdiscoveries.sdkit.main"]
