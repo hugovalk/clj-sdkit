@@ -1,5 +1,6 @@
 (ns com.devdiscoveries.sdkit.model
-  (:require [clojure.spec.alpha :as spec]))
+  (:require [com.devdiscoveries.sdkit.world-state :as s]
+            [clojure.spec.alpha :as spec]))
 
 
 (spec/def ::initial-time number?)
@@ -35,38 +36,37 @@ We have the following entities:
 
 (defn- apply-formula
   "Applies a formula for a `ModelEntity` to the value based on a certain world state. Such a `ModelEntity` must have `:args` and `:formula` properties. `state` is a map."
-  [entity state]
-  (let [eval-args (map (fn [e] (e state)) (:args entity))]
-    (apply (:formula entity) eval-args)))
+  ([entity state] (apply-formula entity state 0))
+  ([entity state delay]
+  (let [eval-args (map (fn [e] (s/query state e delay)) (:args entity))]
+    (apply (:formula entity) eval-args))))
 
 
 (defrecord Constant [const-id default-value]
   ModelEntity
   (id [self] const-id)
-  (value [self state] (const-id state)))
+  (value [self state] (s/query state const-id)))
 
 (defrecord Converter [conv-id formula args]
   ModelEntity
   (id [self] conv-id)
   (value [self state]
-    (let [eval-args (map (fn [e] (e state)) args)]
-      (apply formula eval-args))))
+    (apply-formula self state)))
 
 (defrecord Stock [stock-id default-value formula args]
   ModelEntity
   (id [self] stock-id)
-  (value [self state] (stock-id state)))
+  (value [self state] (s/query state stock-id)))
 
 (defn differential
   "Returns the differential for a `Stock` to the value based on a certain world state. `state` is a map."
   [stock state] (apply-formula stock state))
 
-(defrecord Flow [flow-id formula args]
+(defrecord Flow [flow-id formula args delay]
   ModelEntity
   (id [self] flow-id)
   (value [self state]
-    (let [eval-args (map (fn [e] (e state)) args)]
-      (apply formula eval-args))))
+    (apply-formula self state delay)))
 
 
 (defrecord Model [metadata stocks flows converters constants])

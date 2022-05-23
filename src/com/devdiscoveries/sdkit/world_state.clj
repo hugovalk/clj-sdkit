@@ -1,40 +1,44 @@
 (ns com.devdiscoveries.sdkit.world-state
   (:require [clojure.spec.alpha :as spec]))
 
-(spec/def ::total-timesteps number?)
-(spec/def ::timesteps-needed number?)
+(spec/def ::timestep number?)
+(spec/def ::current-time number?)
+(spec/def ::final-time number?)
 (spec/def ::state-metadata (spec/keys :req [::timestep
-                                            ::timesteps-needed
-                                            ::total-timesteps]))
+                                            ::final-time
+                                            ::current-time]))
 (spec/def ::world-state (spec/keys :req [::state-metadata]))
 
 (defn get-metadata [state key]
   (get-in state [::state-metadata key]))
 
-(defn total-timesteps [state]
-  (get-metadata state ::total-timesteps))
+(defn current-time [state]
+  (get-metadata state ::current-time))
 
-(defn timesteps-needed [state]
-  (get-metadata state ::timesteps-needed))
+(defn final-time [state]
+  (get-metadata state ::final-time))
 
 (defn timestep [state]
   (get-metadata state ::timestep))
 
-(defn- calc-timesteps-needed [model]
-  (let [meta (:metadata model)
-        start (:initial-time meta)
-        end (:final-time meta)
-        step (:timestep meta)]
-    (/ (- end start) step)))
-
 (defn init-from-model [model]
   {::state-metadata {::timestep (get-in model [:metadata :timestep])
-                     ::total-timesteps 0
-                     ::timesteps-needed (calc-timesteps-needed model)}})
+                     ::current-time (get-in model [:metadata :initial-time])
+                     ::final-time (get-in model [:metadata :final-time])}})
 
 (defn step-time [state]
-  (update-in state [::state-metadata ::total-timesteps]
+  (update-in state [::state-metadata ::current-time]
              (fn [t] (+ t (timestep state)))))
+
+(defn save [state k v]
+  (if (k state)
+    (assoc state k (cons v (k state)))
+    (assoc state k (vector v))))
+
+(defn query
+  ([state k] (query state k 0))
+  ([state k delay]
+   (nth (k state) (/ delay (timestep state)) 0.0)))
 
 (defn print-state!
   "Convenience method to print the current world state for debug and logging purposes."

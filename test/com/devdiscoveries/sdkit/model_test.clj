@@ -52,4 +52,3 @@
                  (first (:converters model)) => conv)
      (midje/fact "The flows are set."
                  (first (:flows model)) => flow)))
-

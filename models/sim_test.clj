@@ -1,8 +1,6 @@
 (ns sim-test
   (:use [com.devdiscoveries.sdkit.sweet]))
 
-(def state (atom {}))
-
 (defmodel ref-model
   {:initial-time 0
    :final-time 10

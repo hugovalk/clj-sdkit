@@ -1,13 +1,13 @@
 (ns com.devdiscoveries.sdkit.simulation
   (:require [com.devdiscoveries.sdkit.model :as mod]
             [com.devdiscoveries.sdkit.event-handler :as ev]
-            [com.devdiscoveries.sdkit.world-state :as state]
+            [com.devdiscoveries.sdkit.world-state :as s]
             [clojure.tools.logging :refer [info]]))
 
 (defn- add-constants [state constants]
   (if (and constants (not (empty? constants)))
     (let [c (first constants)]
-      (recur (assoc state (mod/id c) (:default-value c)) (rest constants)))
+      (recur (s/save state (mod/id c) (:default-value c)) (rest constants)))
     state))
 
 (defn- add-stocks [state last-state stocks integrator-fn]
@@ -16,7 +16,7 @@
           value (if last-state
                   (integrator-fn last-state s)
                   (:default-value s))]
-      (recur (assoc state (mod/id s) value)
+      (recur (s/save state (mod/id s) value)
              last-state
              (rest stocks)
              integrator-fn))
@@ -26,7 +26,7 @@
   (if (and converters (not (empty? converters)))
     (let [c (first converters)
           value (mod/value c state)]
-      (recur (assoc state (mod/id c) value)
+      (recur (s/save state (mod/id c) value)
              (rest converters)))
     state))
 
@@ -34,25 +34,25 @@
   (if (and flows (not (empty? flows)))
     (let [f (first flows)
           value (mod/value f state)]
-      (recur (assoc state (mod/id f) value)
+      (recur (s/save state (mod/id f) value)
              (rest flows)))
     state))
 
 (defn euler-integrator [state stock]
   (let [sid (mod/id stock)
-        dt (state/timestep state)]
-    (+ (sid state)
+        dt (s/timestep state)]
+    (+ (s/query state sid)
        (* dt (mod/differential stock state)))))
 
 (defn setup-initial-state [model]
-  (-> (state/init-from-model model)
+  (-> (s/init-from-model model)
       (add-constants (:constants model))
       (add-stocks nil (:stocks model) nil)
       (add-converters (:converters model))
       (add-flows (:flows model))))
 
 (defn calculate-new-state [state model integrator-fn]
-  (-> (state/step-time state)
+  (-> (s/step-time state)
       (add-constants (:constants model))
       (add-stocks state (:stocks model) integrator-fn)
       (add-converters (:converters model))
@@ -67,8 +67,8 @@
 
 (defn running-simulation-timesteps [model handler current-state]
   "Running the next timestep of the model. Returns the updated state of the simulation."
-  (if (> (state/timesteps-needed current-state)
-          (state/total-timesteps current-state))
+  (if (>= (s/final-time current-state)
+          (+ (s/current-time current-state) (s/timestep current-state)))
     (let [updated-state (calculate-new-state current-state model euler-integrator)]
       (ev/timestep-calculated handler updated-state)
       (recur model handler updated-state))

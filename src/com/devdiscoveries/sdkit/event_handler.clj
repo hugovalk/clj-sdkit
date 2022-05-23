@@ -37,7 +37,7 @@
     (log-state! initial-state)
     (reset! status ::simulation-initialized))
   (timestep-calculated [handler updated-state]
-    (let [current (state/total-timesteps updated-state)]
+    (let [current (state/current-time updated-state)]
       (if (= 0 (mod current log-every))
         (do
           (info "Time step" current "calculated: ")
@@ -53,11 +53,11 @@
     (spit file-name "timestep,")
     (spit file-name (join "," (map name column-keys)) :append true)
     (spit file-name "\n" :append true)
-    (spit file-name (str (state/total-timesteps initial-state) ",") :append true)
-    (spit file-name (join "," (map initial-state column-keys)) :append true)
+    (spit file-name (str (state/current-time initial-state) ",") :append true)
+    (spit file-name (join "," (map (fn [k] (state/query initial-state k)) column-keys)) :append true)
     (spit file-name "\n" :append true))
   (timestep-calculated [handler updated-state]
-    (spit file-name (str (state/total-timesteps updated-state) ",") :append true)
-    (spit file-name (join "," (map updated-state column-keys)) :append true)
+    (spit file-name (str (state/current-time updated-state) ",") :append true)
+    (spit file-name (join "," (map (fn [k] (state/query updated-state k)) column-keys)) :append true)
     (spit file-name "\n" :append true))
   (simulation-finished [handler end-state]))

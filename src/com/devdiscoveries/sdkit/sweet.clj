@@ -49,16 +49,19 @@
        ~stock-name)))
 
 
-(defmacro defflow [flow-name formula]
-    "Macro that makes defining a Flow and adding it to the world state easier. The formula has to given in the form of (fn [arg1 arg2] ...body...). The args must refer to other model entities, as they will be converted to keywords to be used in the constructor for Flow. "
+(defmacro defflow
+  "Macro that makes defining a Flow and adding it to the world state easier. The formula has to given in the form of (fn [arg1 arg2] ...body...). The args must refer to other model entities, as they will be converted to keywords to be used in the constructor for Flow. "
+  ([flow-name formula] `(defflow ~flow-name ~formula 0.0))
+  ([flow-name formula delay]
   (let [args (second formula)
         args-map (zipmap args (symbol-range (count args)))]
     `(do
        (def ~flow-name
          (model/->Flow ~(keyword flow-name)
-                 ~(eval (w/postwalk-replace args-map formula))
-                 ~(into [] (map (fn [a] (keyword a)) args))))
-       ~flow-name)))
+                       ~(eval (w/postwalk-replace args-map formula))
+                       ~(into [] (map (fn [a] (keyword a)) args))
+                       ~delay))
+       ~flow-name))))
 
 
 (defn- filter-model-entities [macro coll]
