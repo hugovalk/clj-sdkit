@@ -38,7 +38,7 @@
     (reset! status ::simulation-initialized))
   (timestep-calculated [handler updated-state]
     (let [current (state/current-time updated-state)]
-      (if (= 0 (mod current log-every))
+      (if (= 0M (mod current log-every))
         (do
           (info "Time step" current "calculated: ")
           (log-state! updated-state)))

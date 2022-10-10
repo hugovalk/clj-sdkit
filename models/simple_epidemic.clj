@@ -37,6 +37,6 @@
 
 (def handler (csv-handler "/tmp/epidemic.csv" [:susceptible :infected :recovered :recovered-susceptible :infection-transmitted :people-recovered :recovered-becoming-susceptible :reinfection-transmitted]))
 
-(def plothandler (line-plot-handler [:susceptible :infected :recovered :recovered-susceptible]))
+(def plothandler (line-plot-handler [:susceptible :infected :recovered :recovered-susceptible] 10))
 
 (run-simulation ep-model plothandler)

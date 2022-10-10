@@ -33,13 +33,13 @@
       (let [handler (simple-handler)
             initial-state (sim/initialize-simulation-run model handler)
             updated-state (sim/running-simulation-timesteps model handler initial-state)]
-        (state/current-time initial-state) => 0
-        (state/current-time updated-state) => 3))
+        (state/current-time initial-state) => 0M
+        (state/current-time updated-state) => 3M))
 
    (midje/fact "When total time is not divisible by timestep, do not overflow beyond final time"
       (let [handler (simple-handler)]
         (sim/run (update-in model [:metadata :timestep] (fn [a] 2)) handler)
-        (state/current-time @(:latest-state handler)) => 2)))
+        (state/current-time @(:latest-state handler)) => 2M)))
 
 
 (defmodel ref-model

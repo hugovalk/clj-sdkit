@@ -22,9 +22,9 @@
   (get-metadata state ::timestep))
 
 (defn init-from-model [model]
-  {::state-metadata {::timestep (get-in model [:metadata :timestep])
-                     ::current-time (get-in model [:metadata :initial-time])
-                     ::final-time (get-in model [:metadata :final-time])}})
+  {::state-metadata {::timestep (bigdec (get-in model [:metadata :timestep]))
+                     ::current-time (bigdec (get-in model [:metadata :initial-time]))
+                     ::final-time (bigdec (get-in model [:metadata :final-time]))}})
 
 (defn step-time [state]
   (update-in state [::state-metadata ::current-time]
