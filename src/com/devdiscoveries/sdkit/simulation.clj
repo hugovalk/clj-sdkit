@@ -59,26 +59,26 @@
       (add-flows (:flows model))))
 
 
-(defn initialize-simulation-run [model handler]
+(defn initialize-simulation-run [model handlers]
   "Initializing the simulation run. Returns an atom, containing the initial state of the simulation."
   (let [initial-state (setup-initial-state model)]
-    (ev/simulation-initialized handler initial-state)
+    (doseq [h handlers] (ev/simulation-initialized h initial-state))
     initial-state))
 
-(defn running-simulation-timesteps [model handler current-state]
+(defn running-simulation-timesteps [model handlers current-state]
   "Running the next timestep of the model. Returns the updated state of the simulation."
   (if (>= (s/final-time current-state)
           (+ (s/current-time current-state) (s/timestep current-state)))
     (let [updated-state (calculate-new-state current-state model euler-integrator)]
-      (ev/timestep-calculated handler updated-state)
-      (recur model handler updated-state))
+      (doseq [h handlers] (ev/timestep-calculated h updated-state))
+      (recur model handlers updated-state))
     current-state))
 
-(defn finish-simulation-run [model handler current-state]
+(defn finish-simulation-run [model handlers current-state]
   "Finishing up the simulation run. Returns the end state of the simulation."
-  (ev/simulation-finished handler current-state))
+  (doseq [h handlers] (ev/simulation-finished h current-state)))
 
-(defn run [model handler]
-  (->> (initialize-simulation-run model handler)
-       (running-simulation-timesteps model handler)
-       (finish-simulation-run model handler)))
+(defn run [model handlers]
+  (->> (initialize-simulation-run model handlers)
+       (running-simulation-timesteps model handlers)
+       (finish-simulation-run model handlers)))

@@ -39,4 +39,4 @@
 
 (def plothandler (line-plot-handler [:susceptible :infected :recovered :recovered-susceptible] 5))
 
-(run-simulation ep-model plothandler)
+(run-simulation ep-model plothandler (logging-handler 10 false))

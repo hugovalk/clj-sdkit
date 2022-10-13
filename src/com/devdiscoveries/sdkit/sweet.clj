@@ -82,8 +82,10 @@
 (defn simple-handler []
   (ev/->SimpleStatusHandler (atom nil) (atom nil)))
 
-(defn logging-handler [every]
-  (ev/->LoggingStatusHandler (atom nil) 1))
+(defn logging-handler
+  ([every] (logging-handler every false))
+  ([every log-state?]
+   (ev/->LoggingStatusHandler (atom nil) every log-state?)))
 
-(defn run-simulation [model handler]
-  (sim/run model handler))
+(defn run-simulation [model & handlers]
+  (sim/run model handlers))

@@ -15,30 +15,32 @@
 
 (midje/facts "Facts about running simulations."
    (midje/fact "A simulation can be run."
-      (let [handler (simple-handler)]
-        (sim/run model handler)
+      (let [handler (simple-handler)
+                     handlers (list handler)]
+        (sim/run model handlers)
         @(:status handler) => ::ev/simulation-finished))
 
    (midje/fact "Initializing simulation returns initial world state."
-      (let [initial-state (sim/initialize-simulation-run model (simple-handler))]
+      (let [initial-state (sim/initialize-simulation-run model (list (simple-handler)))]
         (spec/conform ::state/world-state initial-state) => initial-state))
 
    (midje/fact "Running one time step returns valid world state."
-      (let [handler (simple-handler)
-            initial-state (sim/initialize-simulation-run model handler)
-            updated-state (sim/running-simulation-timesteps model handler initial-state)]
+      (let [handlers (list (simple-handler))
+            initial-state (sim/initialize-simulation-run model handlers)
+            updated-state (sim/running-simulation-timesteps model handlers initial-state)]
         (spec/conform ::state/world-state updated-state) => updated-state))
 
    (midje/fact "Running simulation performs all time steps."
-      (let [handler (simple-handler)
-            initial-state (sim/initialize-simulation-run model handler)
-            updated-state (sim/running-simulation-timesteps model handler initial-state)]
+      (let [handlers (list (simple-handler))
+            initial-state (sim/initialize-simulation-run model handlers)
+            updated-state (sim/running-simulation-timesteps model handlers initial-state)]
         (state/current-time initial-state) => 0M
         (state/current-time updated-state) => 3M))
 
    (midje/fact "When total time is not divisible by timestep, do not overflow beyond final time"
-      (let [handler (simple-handler)]
-        (sim/run (update-in model [:metadata :timestep] (fn [a] 2)) handler)
+      (let [handler (simple-handler)
+            handlers (list handler)]
+        (sim/run (update-in model [:metadata :timestep] (fn [a] 2)) handlers)
         (state/current-time @(:latest-state handler)) => 2M)))
 
 
@@ -88,6 +90,7 @@
 
 (midje/fact :integration "Simulation integration test."
    (let [handler (simple-handler)
-         end-state (sim/run ref-model handler)]
+         handlers (list handler)
+         end-state (sim/run ref-model handlers)]
      @(:status handler) => :ev/simulation-finished
      (state/current-time end-state) => 100))

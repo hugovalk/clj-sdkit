@@ -29,19 +29,21 @@
     (info "State is empty.")
     (info (clojure.string/join "\n" (map (fn [[k v]] (str k " = " v)) state)))))
 
-(defrecord LoggingStatusHandler [status log-every]
+(defrecord LoggingStatusHandler [status log-every log-state?]
   SimulationEventHandler
   (simulation-initialized [handler initial-state]
     (info "Simulation initialized...")
     (info "Initial state:")
-    (log-state! initial-state)
+    (if log-state?
+      (log-state! initial-state))
     (reset! status ::simulation-initialized))
   (timestep-calculated [handler updated-state]
     (let [current (state/current-time updated-state)]
       (if (= 0M (mod current log-every))
         (do
           (info "Time step" current "calculated: ")
-          (log-state! updated-state)))
+          (if log-state?
+            (log-state! updated-state))))
       (reset! status ::timestep-calculated)))
   (simulation-finished [handler end-state]
     (info "Simulation finished!")
