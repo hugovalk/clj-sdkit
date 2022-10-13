@@ -9,7 +9,7 @@
   [:div
    [:h1 "Live line plot"]
    [:p "Data of the simulation."]
-   [:vega-lite line-plot {:width 1000}]
+   [:vega-lite line-plot]
    [:p "Should be live updating."]])
 
 (defn- transform-column [from name]
@@ -38,7 +38,9 @@
    :encoding {:x {:field "time" :type "quantitative"}
               :y {:field "quantity" :type "quantitative"}
               :color {:field "item" :type "nominal"}}
-   :mark "line"})
+   :mark "line"
+   :width "1000"
+   :heigth "500"})
 
 (defrecord LinePlotHandler [columns sync-every]
   ev/SimulationEventHandler
