@@ -51,10 +51,10 @@
       (add-converters (:converters model))
       (add-flows (:flows model))))
 
-(defn calculate-new-state [state model integrator-fn]
-  (-> (s/step-time state)
+(defn calculate-new-state [last-state model integrator-fn]
+  (-> (s/step-time last-state)
       (add-constants (:constants model))
-      (add-stocks state (:stocks model) integrator-fn)
+      (add-stocks last-state (:stocks model) integrator-fn)
       (add-converters (:converters model))
       (add-flows (:flows model))))
 

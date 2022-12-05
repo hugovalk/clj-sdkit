@@ -11,7 +11,7 @@
   (defconst population-size 1000000)
   (defconst infection-likelyhood 0.4)
   (defconst recovery-rate 0.05)
-  (defconst reinfection-likelyhood 0.1)
+  (defconst reinfection-likelyhood 0.2)
   (defstock susceptible 999999 (fn [infection-transmitted] (- infection-transmitted)))
   (defstock infected 1
     (fn [infection-transmitted people-recovered reinfection-transmitted]
@@ -30,8 +30,8 @@
   (defflow recovered-becoming-susceptible
     (fn [people-recovered] people-recovered) 50)
   (defflow reinfection-transmitted
-    (fn [infection-likelyhood infected recovered-susceptible population-size]
-      (/ (* infection-likelyhood infected recovered-susceptible)
+    (fn [reinfection-likelyhood infected recovered-susceptible population-size]
+      (/ (* reinfection-likelyhood infected recovered-susceptible)
          population-size))))
 
 
