@@ -4,7 +4,9 @@
 (spec/def ::timestep number?)
 (spec/def ::current-time number?)
 (spec/def ::final-time number?)
-(spec/def ::state-metadata (spec/keys :req [::timestep
+(spec/def ::state-metadata (spec/keys :req [::name
+                                            ::timestep
+                                            ::initial-time
                                             ::final-time
                                             ::current-time]))
 (spec/def ::world-state (spec/keys :req [::state-metadata]))
@@ -15,14 +17,22 @@
 (defn current-time [state]
   (get-metadata state ::current-time))
 
+(defn initial-time [state]
+  (get-metadata state ::initial-time))
+
 (defn final-time [state]
   (get-metadata state ::final-time))
 
 (defn timestep [state]
   (get-metadata state ::timestep))
 
+(defn name [state]
+  (get-metadata state ::name))
+
 (defn init-from-model [model]
-  {::state-metadata {::timestep (bigdec (get-in model [:metadata :timestep]))
+  {::state-metadata {::name (get-in model [:metadata :name])
+                     ::timestep (bigdec (get-in model [:metadata :timestep]))
+                     ::initial-time (bigdec (get-in model [:metadata :initial-time]))
                      ::current-time (bigdec (get-in model [:metadata :initial-time]))
                      ::final-time (bigdec (get-in model [:metadata :final-time]))}})
 
