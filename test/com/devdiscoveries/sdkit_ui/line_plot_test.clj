@@ -5,9 +5,10 @@
 
 
 (midje/facts "Calculating line plot data from world state."
-   (let [state {::s/state-metadata {::s/timestep 0.25
-                                    ::s/timesteps-needed 400
-                                    ::s/total-timesteps 20}}]
+  (let [state {::s/state-metadata {::s/initial-time 0
+                                   ::s/timestep 0.25
+                                   ::s/timesteps-needed 400
+                                   ::s/total-timesteps 20}}]
      (midje/fact "Field from state ends up in line plot data."
                  (let [r1 (s/save state :test 1)
                        r2 (s/save r1 :test 2)
